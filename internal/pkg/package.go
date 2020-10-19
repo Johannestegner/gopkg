@@ -4,6 +4,8 @@ import (
 	"archive/tar"
 	"bytes"
 	"fmt"
+	"github.com/go-pkg-org/gopkg/internal/control"
+	"github.com/go-pkg-org/gopkg/internal/pkg/ignore"
 	"github.com/go-pkg-org/gopkg/internal/util"
 	"github.com/rs/zerolog/log"
 	"io"
@@ -35,24 +37,35 @@ type Entry struct {
 	ArchivePath string
 }
 
-// CreateEntries creates a slice with all files in a specific directory that should be added to the archive.
-// The resulting value is a Entry, which maps a filepath to an archive path.
-func CreateEntries(path string, pathPrefix string, excludedFiles []string) ([]Entry, error) {
+func createEntries(path string, pathPrefix string, ignore ignore.Handler) ([]Entry, error) {
 	dirContent, err := ioutil.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}
 
+	ignorePath := filepath.Join(
+		filepath.Dir(path),
+		".gopkgignore",
+	)
+	ignore.AddSingleIgnore(".git")
+	ignore.AddSingleIgnore(control.GoPkgDir)
+
+	if _, err := os.Stat(ignorePath); err == nil {
+		err := ignore.AddIgnoreSource(ignorePath)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// Write file list.
 	var fileList []Entry
 	for _, file := range dirContent {
-		if util.Contains(excludedFiles, file.Name()) {
-			log.Trace().Str("file", filepath.Join(path, file.Name())).Msg("Skipping file")
+		if ignore.IsIgnored(file.Name()) {
 			continue
 		}
 
 		if file.IsDir() {
-			tmp, err := CreateEntries(filepath.Join(path, file.Name()), "", excludedFiles)
+			tmp, err := createEntries(filepath.Join(path, file.Name()), pathPrefix, ignore.Child())
 			if err != nil {
 				return nil, err
 			}
@@ -71,6 +84,12 @@ func CreateEntries(path string, pathPrefix string, excludedFiles []string) ([]En
 	}
 
 	return fileList, nil
+}
+
+// CreateEntries creates a slice with all files in a specific directory that should be added to the archive.
+// The resulting value is a Entry, which maps a filepath to an archive path.
+func CreateEntries(path string, pathPrefix string, fileTypes []string) ([]Entry, error) {
+	return createEntries(path, pathPrefix, ignore.Handler{})
 }
 
 // Read reads a package and returns content.
