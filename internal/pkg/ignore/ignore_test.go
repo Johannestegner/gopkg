@@ -6,7 +6,7 @@ import (
 )
 
 func TestHandler_AddIgnoreSource(t *testing.T) {
-	dir := t.TempDir()
+	dir, _ := ioutil.TempDir("", "*")
 	file, _ := ioutil.TempFile(dir, "ignore")
 
 	file.WriteString("test.txt\n")
