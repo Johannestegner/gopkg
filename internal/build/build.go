@@ -108,7 +108,7 @@ func buildControlPackage(directory, pkgName string, releaseVersion string) error
 		return err
 	}
 
-	dir, err := pkg.CreateEntries(directory, strings.TrimSuffix(pkgName, "."+pkg.FileExt), []string{".git"})
+	dir, err := pkg.CreateEntries(directory, strings.TrimSuffix(pkgName, "."+pkg.FileExt))
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func buildSourcePackage(directory, releaseVersion, importPath string, p control.
 		return err
 	}
 
-	dir, err := pkg.CreateEntries(directory, importPath, []string{".git", control.GoPkgDir})
+	dir, err := pkg.CreateEntries(directory, importPath)
 	if err != nil {
 		return err
 	}

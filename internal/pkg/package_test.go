@@ -18,7 +18,7 @@ func TestCreateEntries(t *testing.T) {
 	txtFile, _ := ioutil.TempFile(dir, "*.txt")
 	xmlFile, _ := ioutil.TempFile(dir, "*.xml")
 
-	result, _ := CreateEntries(dir, "some/prefix", []string{})
+	result, _ := CreateEntries(dir, "some/prefix")
 
 	expectedPaths := []string{
 		filepath.Join(jsonFile.Name()),

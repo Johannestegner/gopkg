@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/go-pkg-org/gopkg/internal/control"
 	"github.com/go-pkg-org/gopkg/internal/pkg/ignore"
-	"github.com/go-pkg-org/gopkg/internal/util"
 	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
@@ -30,6 +29,8 @@ const (
 	Binary Type = "binary"
 )
 
+const ignoreFileName = ".gopkgignore"
+
 // Entry is a tiny struct to contain data for a specific
 // entry that will be archived into a pkg file.
 type Entry struct {
@@ -44,11 +45,9 @@ func createEntries(path string, pathPrefix string, ignore ignore.Handler) ([]Ent
 	}
 
 	ignorePath := filepath.Join(
-		filepath.Dir(path),
-		".gopkgignore",
+		path,
+		ignoreFileName,
 	)
-	ignore.AddSingleIgnore(".git")
-	ignore.AddSingleIgnore(control.GoPkgDir)
 
 	if _, err := os.Stat(ignorePath); err == nil {
 		err := ignore.AddIgnoreSource(ignorePath)
@@ -88,7 +87,7 @@ func createEntries(path string, pathPrefix string, ignore ignore.Handler) ([]Ent
 
 // CreateEntries creates a slice with all files in a specific directory that should be added to the archive.
 // The resulting value is a Entry, which maps a filepath to an archive path.
-func CreateEntries(path string, pathPrefix string, fileTypes []string) ([]Entry, error) {
+func CreateEntries(path string, pathPrefix string) ([]Entry, error) {
 	return createEntries(path, pathPrefix, ignore.Handler{})
 }
 
